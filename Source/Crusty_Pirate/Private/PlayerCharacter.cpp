@@ -33,12 +33,20 @@ void APlayerCharacter::BeginPlay()
 	AttackBox->OnComponentBeginOverlap.AddDynamic(this, &APlayerCharacter::AttackBoxOverlapBegin);
 	EnableAttackBox(false);
 
+	GameInstance = Cast<UCrustyPirateGameInstance>(GetGameInstance());
+	if (GameInstance)
+		HitPoints = GameInstance->PlayerHP;
+
+	if (GameInstance->IsDoubleJumpUnlocked) {
+		UnlockDoubleJump();
+	}
+
 	if (PlayerHUDClass) {
 		PlayerHUD = CreateWidget<UPlayerHUD>(UGameplayStatics::GetPlayerController(GetWorld(), 0), PlayerHUDClass);
 		if (PlayerHUD) {
 			PlayerHUD->AddToPlayerScreen();
 			PlayerHUD->SetHP(HitPoints);
-			PlayerHUD->SetDiamonds(0);
+			PlayerHUD->SetDiamonds(GameInstance->CollectedDiamondsCount);
 			PlayerHUD->SetLevel(0);
 		}
 	}
@@ -107,7 +115,6 @@ void APlayerCharacter::Attack(const FInputActionValue& Value)
 	if (IsAlive && CanAttack && !IsStunned) {
 		CanAttack = false;
 		CanMove = false;
-		//EnableAttackBox(true);
 		GetAnimInstance()->PlayAnimationOverride(AttackAnimSequence, FName("DefaultSlot"), 1.0f, 0.0f, OnAttackOverrideAnimEndDelegate);
 	}
 }
@@ -131,7 +138,6 @@ void APlayerCharacter::OnAttackOverrideAnimEnd(bool Completed)
 {
 	CanAttack = true;
 	CanMove = true;
-	//EnableAttackBox(false);
 }
 
 void APlayerCharacter::TakenDamage(int Dmg, float StunDuration)
@@ -159,6 +165,7 @@ void APlayerCharacter::UpdateHP(int NewHP)
 	else {
 		HitPoints = NewHP;
 	}
+	GameInstance->SetPlayerHP(HitPoints);
 	PlayerHUD->SetHP(HitPoints);
 }
 
@@ -178,4 +185,29 @@ void APlayerCharacter::Stun(float Duration)
 void APlayerCharacter::OnStunTimerTimeout()
 {
 	IsStunned = false;
+}
+
+void APlayerCharacter::CollectItem(ECollectableType Type)
+{
+	UGameplayStatics::PlaySound2D(GetWorld(), ItemCollectedSound);
+	switch (Type) {
+		case ECollectableType::Diamond:
+			GameInstance->AddDiamond(1);
+			PlayerHUD->SetDiamonds(GameInstance->CollectedDiamondsCount);
+			break;
+		case ECollectableType::HealthPotion:
+			UpdateHP(HitPoints + 25);
+			break;
+		case ECollectableType::DoubleJumpUpgrade:
+			if (!GameInstance->IsDoubleJumpUnlocked) {
+				GameInstance->IsDoubleJumpUnlocked = true;
+				UnlockDoubleJump();
+			}
+			break;
+	}
+}
+
+void APlayerCharacter::UnlockDoubleJump()
+{
+	JumpMaxCount = 2;
 }

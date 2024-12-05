@@ -15,8 +15,10 @@
 #include "Engine/TimerHandle.h"
 
 #include "PaperZDAnimInstance.h"
-
+#include "Sound/SoundBase.h"
 #include "PlayerHUD.h"
+#include "CrustyPirateGameInstance.h"
+#include "CollectableItem.h"
 
 #include "PlayerCharacter.generated.h"
 
@@ -59,6 +61,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UPaperZDAnimSequence* AttackAnimSequence;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	USoundBase* ItemCollectedSound;
+
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly)
 	bool IsAlive = true;
 
@@ -67,7 +72,6 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	bool CanAttack = true;
-
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	bool IsStunned = false;
@@ -86,6 +90,9 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	UPlayerHUD* PlayerHUD;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	UCrustyPirateGameInstance* GameInstance;
 
 	FZDOnAnimationOverrideEndSignature OnAttackOverrideAnimEndDelegate;
 
@@ -108,4 +115,6 @@ public:
 	void UpdateHP(int NewHP);
 	void Stun(float StunDuration);
 	void OnStunTimerTimeout();
+	void CollectItem(ECollectableType Type);
+	void UnlockDoubleJump();
 };
