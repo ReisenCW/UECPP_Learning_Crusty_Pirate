@@ -1,6 +1,7 @@
 #include "PlayerCharacter.h"
 #include "Enemy.h"
 #include "Kismet/GameplayStatics.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 APlayerCharacter::APlayerCharacter()
 {
@@ -47,7 +48,7 @@ void APlayerCharacter::BeginPlay()
 			PlayerHUD->AddToPlayerScreen();
 			PlayerHUD->SetHP(HitPoints);
 			PlayerHUD->SetDiamonds(GameInstance->CollectedDiamondsCount);
-			PlayerHUD->SetLevel(0);
+			PlayerHUD->SetLevel(GameInstance->CurrentLevelIndex);
 		}
 	}
 }
@@ -136,13 +137,16 @@ void APlayerCharacter::UpdateDirection(float MoveDirection)
 
 void APlayerCharacter::OnAttackOverrideAnimEnd(bool Completed)
 {
-	CanAttack = true;
-	CanMove = true;
+	if (IsAlive && IsActive) {
+		CanAttack = true;
+		CanMove = true;
+	}
 }
 
 void APlayerCharacter::TakenDamage(int Dmg, float StunDuration)
 {
 	if (!IsAlive) return;
+	if (!IsActive) return;
 	UpdateHP(HitPoints - Dmg);
 	if (HitPoints <= 0) {
 		IsAlive = false;
@@ -150,6 +154,9 @@ void APlayerCharacter::TakenDamage(int Dmg, float StunDuration)
 		CanAttack = false;
 		GetAnimInstance()->JumpToNode(FName("JumpDied"), FName("CaptainStateMachine"));
 		EnableAttackBox(false);
+
+		float RestartDelay = 3.0f;
+		GetWorldTimerManager().SetTimer(RestartTimer, this, &APlayerCharacter::OnRestartTimerTimeout, 1.0f, false, RestartDelay);
 	}
 	else {
 		Stun(StunDuration);
@@ -210,4 +217,19 @@ void APlayerCharacter::CollectItem(ECollectableType Type)
 void APlayerCharacter::UnlockDoubleJump()
 {
 	JumpMaxCount = 2;
+}
+
+void APlayerCharacter::OnRestartTimerTimeout()
+{
+	GameInstance->RestartGame();
+}
+
+void APlayerCharacter::DeActivate()
+{
+	if (IsActive) {
+		IsActive = false;
+		CanAttack = false;
+		CanMove = false;
+		GetCharacterMovement()->StopMovementImmediately();
+	}
 }

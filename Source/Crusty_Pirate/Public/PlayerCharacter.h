@@ -76,6 +76,9 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	bool IsStunned = false;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	bool IsActive = true;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int AttackDmg = 25;
 
@@ -98,6 +101,8 @@ public:
 
 	FTimerHandle StunTimer;
 
+	FTimerHandle RestartTimer;
+
 public:
 	UFUNCTION()
 	void AttackBoxOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
@@ -117,4 +122,6 @@ public:
 	void OnStunTimerTimeout();
 	void CollectItem(ECollectableType Type);
 	void UnlockDoubleJump();
+	void OnRestartTimerTimeout();
+	void DeActivate();
 };
