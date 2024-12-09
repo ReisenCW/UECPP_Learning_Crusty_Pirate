@@ -59,6 +59,9 @@ public:
 	UInputAction* AttackAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UInputAction* QuitAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UPaperZDAnimSequence* AttackAnimSequence;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -124,4 +127,5 @@ public:
 	void UnlockDoubleJump();
 	void OnRestartTimerTimeout();
 	void DeActivate();
+	void QuitGame();
 };
